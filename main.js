@@ -475,12 +475,48 @@ mainContent.addEventListener('scroll', () => {
     topBar.style.backgroundColor = `rgba(18, 18, 18, ${opacity * 0.9})`;
 });
 
-// Sidebar Link Click Simulation
+// Sidebar Responsive Logic
+const menuToggle = document.getElementById('menu-toggle');
+const sidebar = document.querySelector('.sidebar');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+const app = document.getElementById('app');
+
+function checkMobile() {
+    if (window.innerWidth < 768) {
+        app.classList.add('mobile-view');
+    } else {
+        app.classList.remove('mobile-view');
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('visible');
+    }
+}
+
+// Initial check
+checkMobile();
+window.addEventListener('resize', checkMobile);
+
+function toggleSidebar() {
+    sidebar.classList.toggle('open');
+    sidebarOverlay.classList.toggle('visible');
+}
+
+menuToggle?.addEventListener('click', toggleSidebar);
+sidebarOverlay?.addEventListener('click', toggleSidebar);
+
+// Close sidebar when clicking a nav item on mobile
 document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
-        document.querySelector('.nav-item.active')?.classList.remove('active');
-        item.classList.add('active');
+        if (window.innerWidth <= 768) {
+            toggleSidebar();
+        }
     });
 });
+
+// Update current track on click
+function updateCurrentTrackUI(song) {
+    document.getElementById('current-track-img').src = song.image;
+    document.getElementById('current-track-title').innerText = song.title;
+    document.getElementById('current-track-artist').innerText = song.artist;
+}
 
 lucide.createIcons();

@@ -1,0 +1,9 @@
+{
+  "appId": "com.yugesh.yundou",
+  "appName": "Yundou",
+  "webDir": "dist",
+  "server": {
+    "url": "https://yundou.vercel.app",
+    "cleartext": true
+  }
+}
