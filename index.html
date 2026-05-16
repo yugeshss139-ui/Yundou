@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yundou - Your Ultimate Music Experience</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <meta name="description" content="A premium Spotify-inspired music player UI.">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand" style="padding: 0 12px 12px 12px; display: flex; align-items: center; gap: 8px;">
+                <img src="/images/logo.png" alt="Yundou Logo" class="brand-logo" style="width: 140px; filter: invert(1);">
+            </div>
+            <div class="nav-links">
+                <a href="#" class="nav-item active">
+                    <i data-lucide="home"></i>
+                    <span>Home</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i data-lucide="search"></i>
+                    <span>Search</span>
+                </a>
+            </div>
+
+            <div class="library-section">
+                <div class="library-header">
+                    <h2><i data-lucide="library"></i> Your Library</h2>
+                    <i data-lucide="plus" style="cursor: pointer;"></i>
+                </div>
+                
+                <div class="nav-links">
+                    <div class="nav-item active">
+                        <i data-lucide="heart" style="color: var(--spotify-green);"></i>
+                        <span>Fav of all time💕</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="main-content">
+            <header class="top-bar">
+                <div class="nav-buttons">
+                    <button class="nav-btn"><i data-lucide="chevron-left"></i></button>
+                    <button class="nav-btn"><i data-lucide="chevron-right"></i></button>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <h1 class="section-title">Fav of all time💕</h1>
+                
+                <div class="grid-container" id="playlist-grid">
+                    <!-- Cards will be injected by JS -->
+                </div>
+
+                <h2 class="section-title" style="margin-top: 48px;">Discover More</h2>
+                <div class="grid-container" id="made-for-you-grid">
+                    <!-- More cards -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Player Bar -->
+        <footer class="player-bar">
+            <div class="current-track">
+                <img src="/images/chill.png" alt="Track Cover" class="track-img" id="current-track-img">
+                <div class="track-info">
+                    <h4 id="current-track-title">After Hours</h4>
+                    <p id="current-track-artist">Midnight City</p>
+                </div>
+                <i data-lucide="heart" style="font-size: 16px; cursor: pointer; color: var(--text-sub);"></i>
+            </div>
+
+            <div class="player-controls">
+                <div class="control-buttons">
+                    <i data-lucide="shuffle" style="width: 18px;"></i>
+                    <button class="nav-btn-alt"><i data-lucide="skip-back"></i></button>
+                    <div class="play-pause">
+                        <i data-lucide="play" id="main-play-icon"></i>
+                    </div>
+                    <button class="nav-btn-alt"><i data-lucide="skip-forward"></i></button>
+                    <i data-lucide="repeat" style="width: 18px;"></i>
+                </div>
+                <div class="playback-bar">
+                    <span id="current-time">0:00</span>
+                    <div class="progress-slider" id="progress-slider">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <span id="duration">0:00</span>
+                </div>
+            </div>
+
+        </footer>
+    </div>
+    <script type="module" src="/main.js"></script>
+</body>
+</html>
