@@ -35,8 +35,8 @@
                     <i data-lucide="plus" style="cursor: pointer;"></i>
                 </div>
                 
-                <div class="nav-links">
-                    <div class="nav-item active">
+                <div class="nav-links" id="user-playlists">
+                    <div class="nav-item active" id="fav-all-time">
                         <i data-lucide="heart" style="color: var(--spotify-green);"></i>
                         <span>Fav of all time💕</span>
                     </div>
@@ -53,6 +53,10 @@
                 <div class="nav-buttons">
                     <button class="nav-btn"><i data-lucide="chevron-left"></i></button>
                     <button class="nav-btn"><i data-lucide="chevron-right"></i></button>
+                </div>
+                <div class="search-container" id="search-container">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="search-input" placeholder="What do you want to play?">
                 </div>
             </header>
 
@@ -83,13 +87,13 @@
 
             <div class="player-controls">
                 <div class="control-buttons">
-                    <i data-lucide="shuffle" style="width: 18px;"></i>
-                    <button class="nav-btn-alt"><i data-lucide="skip-back"></i></button>
-                    <div class="play-pause">
+                    <button class="nav-btn-alt" id="shuffle-btn"><i data-lucide="shuffle" style="width: 18px;"></i></button>
+                    <button class="nav-btn-alt" id="prev-btn"><i data-lucide="skip-back"></i></button>
+                    <div class="play-pause" id="play-pause-main">
                         <i data-lucide="play" id="main-play-icon"></i>
                     </div>
-                    <button class="nav-btn-alt"><i data-lucide="skip-forward"></i></button>
-                    <i data-lucide="repeat" style="width: 18px;"></i>
+                    <button class="nav-btn-alt" id="next-btn"><i data-lucide="skip-forward"></i></button>
+                    <button class="nav-btn-alt" id="repeat-btn"><i data-lucide="repeat" style="width: 18px;"></i></button>
                 </div>
                 <div class="playback-bar">
                     <span id="current-time">0:00</span>
@@ -101,6 +105,29 @@
             </div>
 
         </footer>
+    </div>
+
+    <!-- Playlist Creation Popup -->
+    <div class="modal" id="playlist-modal">
+        <div class="modal-content">
+            <h3>Playlist Name</h3>
+            <input type="text" id="new-playlist-name" placeholder="Enter playlist name">
+            <div class="song-selector-list" id="song-selector-list">
+                <!-- Songs with checkboxes will be injected here -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-save" id="save-playlist-btn">Save</button>
+                <button class="btn btn-cancel" id="cancel-playlist-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="song-context-menu">
+        <div class="menu-item" id="menu-add-queue"><i data-lucide="list-music"></i> Add to Queue</div>
+        <div class="menu-item" id="menu-add-fav"><i data-lucide="heart"></i> Add to Favorites</div>
+        <div class="menu-item" id="menu-remove"><i data-lucide="trash-2"></i> Remove from Playlist</div>
+        <div class="menu-item" id="menu-share"><i data-lucide="share-2"></i> Share</div>
     </div>
     <script type="module" src="/main.js"></script>
 </body>

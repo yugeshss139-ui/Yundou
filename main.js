@@ -350,9 +350,67 @@ const allSongs = [
     }
 ];
 
+// State Management
 let currentSongIndex = 0;
-const audio = new Audio(allSongs[currentSongIndex].url);
 let isPlaying = false;
+let repeatMode = 'none'; // 'none', 'once', 'continuous'
+let isShuffle = false;
+let queue = [];
+let favorites = JSON.parse(localStorage.getItem('yundou_favorites')) || [];
+let userPlaylists = JSON.parse(localStorage.getItem('yundou_playlists')) || [];
+let playlistOrder = JSON.parse(localStorage.getItem('yundou_playlist_order')) || ['fav-all-time'];
+
+// Persistence for state restoration
+let lastPlayedIndex = parseInt(localStorage.getItem('yundou_last_index')) || 0;
+let lastPlayedTime = parseFloat(localStorage.getItem('yundou_last_time')) || 0;
+
+currentSongIndex = lastPlayedIndex;
+
+const audio = new Audio();
+audio.preload = 'metadata';
+audio.src = allSongs[currentSongIndex].url;
+audio.currentTime = lastPlayedTime;
+
+function savePlaybackState() {
+    localStorage.setItem('yundou_last_index', currentSongIndex);
+    localStorage.setItem('yundou_last_time', audio.currentTime);
+}
+
+// Periodically save time
+setInterval(savePlaybackState, 5000);
+
+// Media Session Setup
+function updateMediaSession() {
+    if ('mediaSession' in navigator) {
+        const song = allSongs[currentSongIndex];
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: song.title,
+            artist: song.artist,
+            album: 'Yundou Hits',
+            artwork: [
+                { src: song.image, sizes: '512x512', type: 'image/png' }
+            ]
+        });
+
+        navigator.mediaSession.setActionHandler('play', togglePlay);
+        navigator.mediaSession.setActionHandler('pause', togglePlay);
+        navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+        navigator.mediaSession.setActionHandler('nexttrack', playNext);
+
+        try {
+            navigator.mediaSession.setActionHandler('shuffle', () => {
+                isShuffle = !isShuffle;
+                updateUI();
+            });
+            navigator.mediaSession.setActionHandler('repeat', () => {
+                repeatMode = repeatMode === 'none' ? 'once' : (repeatMode === 'once' ? 'continuous' : 'none');
+                updateUI();
+            });
+        } catch (e) {
+            console.log("Shuffle/Repeat actions not supported in Media Session");
+        }
+    }
+}
 
 function createCard(item, index) {
     const card = document.createElement('div');
@@ -376,9 +434,24 @@ function createCard(item, index) {
 function playSong(index) {
     currentSongIndex = index;
     audio.src = allSongs[currentSongIndex].url;
-    audio.play();
+    audio.play().catch(e => console.log("Playback failed:", e));
     isPlaying = true;
     updateUI();
+    updateMediaSession();
+}
+
+function playNext() {
+    if (isShuffle) {
+        currentSongIndex = Math.floor(Math.random() * allSongs.length);
+    } else {
+        currentSongIndex = (currentSongIndex + 1) % allSongs.length;
+    }
+    playSong(currentSongIndex);
+}
+
+function playPrev() {
+    currentSongIndex = (currentSongIndex - 1 + allSongs.length) % allSongs.length;
+    playSong(currentSongIndex);
 }
 
 function togglePlay() {
@@ -399,7 +472,79 @@ function updateUI() {
 
     const playIcon = document.getElementById('main-play-icon');
     playIcon.setAttribute('data-lucide', isPlaying ? 'pause' : 'play');
+    
+    // Update Repeat Button Color
+    const repeatBtn = document.getElementById('repeat-btn');
+    if (repeatMode === 'none') {
+        repeatBtn.style.color = '#b3b3b3'; // Spotify default grey (User said black, but black is invisible here)
+    } else if (repeatMode === 'once') {
+        repeatBtn.style.color = 'red';
+    } else if (repeatMode === 'continuous') {
+        repeatBtn.style.color = 'green';
+    }
+
+    // Update Shuffle Button
+    document.getElementById('shuffle-btn').style.color = isShuffle ? 'var(--spotify-green)' : 'white';
+
     lucide.createIcons();
+    savePlaybackState();
+}
+
+// Initialize on load
+window.addEventListener('DOMContentLoaded', () => {
+    updateUI();
+    updateMediaSession();
+});
+
+// Search Functionality
+const searchInput = document.getElementById('search-input');
+searchInput?.addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    const results = allSongs.filter(song => 
+        song.title.toLowerCase().includes(term) || 
+        song.artist.toLowerCase().includes(term)
+    );
+
+    renderSearchResults(results, term);
+});
+
+// Sidebar Search Button Handler
+const sidebarSearchBtn = document.querySelector('.nav-item i[data-lucide="search"]')?.parentElement;
+sidebarSearchBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    searchInput?.focus();
+    searchInput?.scrollIntoView({ behavior: 'smooth' });
+});
+
+function renderSearchResults(results, term) {
+    if (!term) {
+        renderGrids();
+        return;
+    }
+
+    const grid = document.getElementById('playlist-grid');
+    const title = document.querySelector('.section-title');
+    title.innerText = `Search results for "${term}"`;
+    document.getElementById('made-for-you-grid').parentElement.style.display = 'none';
+
+    grid.innerHTML = '';
+    if (results.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; font-size: 18px; color: var(--sky-blue);">
+            Sorry the song😭 not found so ask to 💞Yugesh💕
+        </div>`;
+    } else {
+        results.forEach(song => {
+            const index = allSongs.indexOf(song);
+            const card = createCard(song, index);
+            const desc = card.querySelector('.card-desc');
+            const fileName = song.url.split('/').pop();
+            desc.innerHTML = `
+                <div style="color: white;">${song.artist}</div>
+                <div style="font-size: 10px; color: var(--text-sub); margin-top: 4px;">File: ${fileName}</div>
+            `;
+            grid.appendChild(card);
+        });
+    }
 }
 
 function formatTime(seconds) {
@@ -412,36 +557,60 @@ function formatTime(seconds) {
 const playlistGrid = document.getElementById('playlist-grid');
 const madeForYouGrid = document.getElementById('made-for-you-grid');
 
-// Render all songs in the "Good evening" grid
-allSongs.forEach((item, index) => {
-    playlistGrid.appendChild(createCard(item, index));
-});
+function renderGrids() {
+    playlistGrid.innerHTML = '';
+    madeForYouGrid.innerHTML = '';
+    document.querySelector('.section-title').innerText = 'Fav of all time💕';
+    document.getElementById('made-for-you-grid').parentElement.style.display = 'block';
 
-// Render random selection in "Made for you"
-[...allSongs].sort(() => 0.5 - Math.random()).slice(0, 12).forEach((item) => {
-    const index = allSongs.indexOf(item);
-    madeForYouGrid.appendChild(createCard(item, index));
-});
+    allSongs.forEach((item, index) => {
+        playlistGrid.appendChild(createCard(item, index));
+    });
+
+    [...allSongs].sort(() => 0.5 - Math.random()).slice(0, 12).forEach((item) => {
+        const index = allSongs.indexOf(item);
+        madeForYouGrid.appendChild(createCard(item, index));
+    });
+}
+
+renderGrids();
 
 // Player Controls
-const playPauseBtn = document.querySelector('.play-pause');
-const nextBtn = document.querySelector('[data-lucide="skip-forward"]').parentElement;
-const prevBtn = document.querySelector('[data-lucide="skip-back"]').parentElement;
+const playPauseBtn = document.getElementById('play-pause-main');
+const nextBtn = document.getElementById('next-btn');
+const prevBtn = document.getElementById('prev-btn');
+const shuffleBtn = document.getElementById('shuffle-btn');
+const repeatBtn = document.getElementById('repeat-btn');
 const progressBar = document.getElementById('progress-slider');
 const progressFill = document.getElementById('progress-fill');
 const currentTimeEl = document.getElementById('current-time');
 const durationEl = document.getElementById('duration');
 
 playPauseBtn.addEventListener('click', togglePlay);
+nextBtn.addEventListener('click', playNext);
+prevBtn.addEventListener('click', playPrev);
 
-nextBtn.addEventListener('click', () => {
-    currentSongIndex = (currentSongIndex + 1) % allSongs.length;
-    playSong(currentSongIndex);
+shuffleBtn.addEventListener('click', () => {
+    isShuffle = !isShuffle;
+    updateUI();
 });
 
-prevBtn.addEventListener('click', () => {
-    currentSongIndex = (currentSongIndex - 1 + allSongs.length) % allSongs.length;
-    playSong(currentSongIndex);
+let repeatClickTimeout;
+repeatBtn.addEventListener('click', () => {
+    if (repeatClickTimeout) {
+        clearTimeout(repeatClickTimeout);
+        repeatClickTimeout = null;
+        // Double Click -> Continuous
+        repeatMode = 'continuous';
+        updateUI();
+    } else {
+        repeatClickTimeout = setTimeout(() => {
+            // Single Click -> Once
+            repeatMode = repeatMode === 'once' ? 'none' : 'once';
+            repeatClickTimeout = null;
+            updateUI();
+        }, 300);
+    }
 });
 
 audio.addEventListener('timeupdate', () => {
@@ -455,8 +624,18 @@ audio.addEventListener('loadedmetadata', () => {
 });
 
 audio.addEventListener('ended', () => {
-    currentSongIndex = (currentSongIndex + 1) % allSongs.length;
-    playSong(currentSongIndex);
+    if (repeatMode === 'once') {
+        repeatMode = 'none';
+        audio.play();
+    } else if (repeatMode === 'continuous') {
+        audio.play();
+    } else if (queue.length > 0) {
+        const nextFromQueue = queue.shift();
+        playSong(nextFromQueue);
+    } else {
+        playNext();
+    }
+    updateUI();
 });
 
 progressBar.addEventListener('click', (e) => {
@@ -512,11 +691,210 @@ document.querySelectorAll('.nav-item').forEach(item => {
     });
 });
 
-// Update current track on click
-function updateCurrentTrackUI(song) {
-    document.getElementById('current-track-img').src = song.image;
-    document.getElementById('current-track-title').innerText = song.title;
-    document.getElementById('current-track-artist').innerText = song.artist;
+// Playlist Management
+const addPlaylistBtn = document.querySelector('.library-header i[data-lucide="plus"]')?.parentElement || document.querySelector('.library-header i[data-lucide="plus"]');
+const playlistModal = document.getElementById('playlist-modal');
+const savePlaylistBtn = document.getElementById('save-playlist-btn');
+const cancelPlaylistBtn = document.getElementById('cancel-playlist-btn');
+const songSelectorList = document.getElementById('song-selector-list');
+const userPlaylistsContainer = document.getElementById('user-playlists');
+
+addPlaylistBtn.addEventListener('click', () => {
+    playlistModal.classList.add('visible');
+    renderSongSelector();
+});
+
+cancelPlaylistBtn.addEventListener('click', () => {
+    playlistModal.classList.remove('visible');
+});
+
+function renderSongSelector() {
+    songSelectorList.innerHTML = '';
+    allSongs.forEach((song, i) => {
+        const item = document.createElement('div');
+        item.className = 'song-selector-item';
+        item.innerHTML = `
+            <input type="checkbox" id="song-select-${i}" value="${i}">
+            <label for="song-select-${i}">${song.title} - ${song.artist}</label>
+        `;
+        songSelectorList.appendChild(item);
+    });
 }
+
+savePlaylistBtn.addEventListener('click', () => {
+    const name = document.getElementById('new-playlist-name').value;
+    if (!name) return;
+
+    const selectedSongs = Array.from(songSelectorList.querySelectorAll('input:checked')).map(cb => parseInt(cb.value));
+    const newPlaylist = { id: 'pl-' + Date.now(), name, songs: selectedSongs };
+    
+    userPlaylists.push(newPlaylist);
+    playlistOrder.push(newPlaylist.id);
+    saveUserData();
+    renderUserPlaylists();
+    playlistModal.classList.remove('visible');
+    document.getElementById('new-playlist-name').value = '';
+});
+
+function saveUserData() {
+    localStorage.setItem('yundou_playlists', JSON.stringify(userPlaylists));
+    localStorage.setItem('yundou_playlist_order', JSON.stringify(playlistOrder));
+    localStorage.setItem('yundou_favorites', JSON.stringify(favorites));
+}
+
+function renderUserPlaylists() {
+    // Clear dynamic playlists but keep Fav of all time
+    const favItem = document.getElementById('fav-all-time');
+    userPlaylistsContainer.innerHTML = '';
+    userPlaylistsContainer.appendChild(favItem);
+
+    playlistOrder.forEach(id => {
+        if (id === 'fav-all-time') return;
+        const pl = userPlaylists.find(p => p.id === id);
+        if (!pl) return;
+
+        const item = document.createElement('div');
+        item.className = 'nav-item';
+        item.draggable = true;
+        item.setAttribute('data-playlist-id', pl.id);
+        item.innerHTML = `
+            <i data-lucide="music"></i>
+            <span>${pl.name}</span>
+        `;
+        
+        // Drag and Drop Logic
+        item.addEventListener('dragstart', () => item.classList.add('dragging'));
+        item.addEventListener('dragend', () => {
+            item.classList.remove('dragging');
+            updatePlaylistOrder();
+        });
+
+        userPlaylistsContainer.appendChild(item);
+    });
+    lucide.createIcons();
+}
+
+function updatePlaylistOrder() {
+    const items = Array.from(userPlaylistsContainer.querySelectorAll('.nav-item'));
+    const newOrder = items.map(item => {
+        if (item.id === 'fav-all-time') return 'fav-all-time';
+        return item.getAttribute('data-playlist-id');
+    }).filter(Boolean);
+    
+    playlistOrder = newOrder;
+    saveUserData();
+}
+
+// Enable Drag and Drop for user playlists
+userPlaylistsContainer.addEventListener('dragover', e => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(userPlaylistsContainer, e.clientY);
+    const dragging = document.querySelector('.dragging');
+    if (afterElement == null) {
+        userPlaylistsContainer.appendChild(dragging);
+    } else {
+        userPlaylistsContainer.insertBefore(dragging, afterElement);
+    }
+});
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.nav-item:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Initial Render
+renderUserPlaylists();
+
+// Context Menu Logic
+const contextMenu = document.getElementById('song-context-menu');
+let activeSongIndex = null;
+
+function showContextMenu(e, index) {
+    e.preventDefault();
+    activeSongIndex = index;
+    contextMenu.style.display = 'block';
+    contextMenu.style.left = e.pageX + 'px';
+    contextMenu.style.top = e.pageY + 'px';
+}
+
+document.addEventListener('click', () => {
+    contextMenu.style.display = 'none';
+});
+
+// Update createCard to include three dots and context menu hook
+function createCard(item, index) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+        <img src="${item.image}" alt="${item.title}" class="card-image">
+        <div class="card-options" id="options-${index}">
+            <i data-lucide="more-vertical"></i>
+        </div>
+        <div class="play-btn-overlay">
+            <i data-lucide="play"></i>
+        </div>
+        <div class="card-title">${item.title}</div>
+        <div class="card-desc">${item.artist}</div>
+    `;
+
+    card.addEventListener('click', (e) => {
+        if (e.target.closest('.card-options')) {
+            showContextMenu(e, index);
+        } else {
+            playSong(index);
+        }
+    });
+
+    return card;
+}
+
+// Context Menu Actions
+document.getElementById('menu-add-queue').addEventListener('click', () => {
+    queue.push(activeSongIndex);
+    alert('Added to Queue!');
+});
+
+document.getElementById('menu-add-fav').addEventListener('click', () => {
+    if (!favorites.includes(activeSongIndex)) {
+        favorites.push(activeSongIndex);
+        saveUserData();
+        alert('Added to Favorites!');
+    }
+});
+
+document.getElementById('menu-share').addEventListener('click', () => {
+    const song = allSongs[activeSongIndex];
+    if (navigator.share) {
+        navigator.share({
+            title: song.title,
+            text: `Check out ${song.title} by ${song.artist} on Yundou!`,
+            url: window.location.href
+        });
+    } else {
+        alert('Sharing: ' + song.title);
+    }
+});
+
+document.getElementById('menu-remove').addEventListener('click', () => {
+    const favIndex = favorites.indexOf(activeSongIndex);
+    if (favIndex > -1) {
+        favorites.splice(favIndex, 1);
+        saveUserData();
+        alert('Removed from Favorites!');
+        if (document.querySelector('.section-title').innerText === 'Fav of all time💕') {
+            renderGrids();
+        }
+    } else {
+        alert('Song is not in favorites!');
+    }
+});
 
 lucide.createIcons();
