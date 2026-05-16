@@ -472,7 +472,7 @@ function updateUI() {
 
     const playIcon = document.getElementById('main-play-icon');
     playIcon.setAttribute('data-lucide', isPlaying ? 'pause' : 'play');
-    
+
     // Update Repeat Button Color
     const repeatBtn = document.getElementById('repeat-btn');
     if (repeatMode === 'none') {
@@ -500,8 +500,8 @@ window.addEventListener('DOMContentLoaded', () => {
 const searchInput = document.getElementById('search-input');
 searchInput?.addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase();
-    const results = allSongs.filter(song => 
-        song.title.toLowerCase().includes(term) || 
+    const results = allSongs.filter(song =>
+        song.title.toLowerCase().includes(term) ||
         song.artist.toLowerCase().includes(term)
     );
 
@@ -731,7 +731,7 @@ savePlaylistBtn.addEventListener('click', () => {
 
     const selectedSongs = Array.from(songSelectorList.querySelectorAll('input:checked')).map(cb => parseInt(cb.value));
     const newPlaylist = { id: 'pl-' + Date.now(), name, songs: selectedSongs };
-    
+
     userPlaylists.push(newPlaylist);
     playlistOrder.push(newPlaylist.id);
     saveUserData();
@@ -765,13 +765,13 @@ function renderUserPlaylists() {
             <i data-lucide="music"></i>
             <span>${pl.name}</span>
         `;
-        
+
         // Drag and Drop Logic
         item.addEventListener('dragstart', (e) => {
             item.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
         });
-        
+
         item.addEventListener('dragend', () => {
             item.classList.remove('dragging');
             updatePlaylistOrder();
@@ -788,7 +788,7 @@ function updatePlaylistOrder() {
         if (item.id === 'fav-all-time') return 'fav-all-time';
         return item.getAttribute('data-playlist-id');
     }).filter(Boolean);
-    
+
     playlistOrder = newOrder;
     saveUserData();
 }
@@ -838,31 +838,7 @@ document.addEventListener('click', () => {
 });
 
 // Update createCard to include three dots and context menu hook
-function createCard(item, index) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-        <img src="${item.image}" alt="${item.title}" class="card-image">
-        <div class="card-options" id="options-${index}">
-            <i data-lucide="more-vertical"></i>
-        </div>
-        <div class="play-btn-overlay">
-            <i data-lucide="play"></i>
-        </div>
-        <div class="card-title">${item.title}</div>
-        <div class="card-desc">${item.artist}</div>
-    `;
 
-    card.addEventListener('click', (e) => {
-        if (e.target.closest('.card-options')) {
-            showContextMenu(e, index);
-        } else {
-            playSong(index);
-        }
-    });
-
-    return card;
-}
 
 // Context Menu Actions
 document.getElementById('menu-add-queue').addEventListener('click', () => {
