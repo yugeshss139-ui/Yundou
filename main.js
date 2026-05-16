@@ -509,11 +509,13 @@ searchInput?.addEventListener('input', (e) => {
 });
 
 // Sidebar Search Button Handler
-const sidebarSearchBtn = document.querySelector('.nav-item i[data-lucide="search"]')?.parentElement;
+const sidebarSearchBtn = document.querySelector('.nav-item [data-lucide="search"]')?.closest('.nav-item');
 sidebarSearchBtn?.addEventListener('click', (e) => {
     e.preventDefault();
-    searchInput?.focus();
-    searchInput?.scrollIntoView({ behavior: 'smooth' });
+    const searchContainer = document.getElementById('search-container');
+    const searchInput = document.getElementById('search-input');
+    searchContainer.scrollIntoView({ behavior: 'smooth' });
+    searchInput.focus();
 });
 
 function renderSearchResults(results, term) {
@@ -595,22 +597,24 @@ shuffleBtn.addEventListener('click', () => {
     updateUI();
 });
 
-let repeatClickTimeout;
+let lastRepeatClick = 0;
 repeatBtn.addEventListener('click', () => {
-    if (repeatClickTimeout) {
-        clearTimeout(repeatClickTimeout);
-        repeatClickTimeout = null;
+    const now = Date.now();
+    if (now - lastRepeatClick < 300) {
         // Double Click -> Continuous
         repeatMode = 'continuous';
-        updateUI();
+        lastRepeatClick = 0; // Reset
     } else {
-        repeatClickTimeout = setTimeout(() => {
-            // Single Click -> Once
-            repeatMode = repeatMode === 'once' ? 'none' : 'once';
-            repeatClickTimeout = null;
-            updateUI();
+        lastRepeatClick = now;
+        setTimeout(() => {
+            if (lastRepeatClick === now) {
+                // Single Click -> Once
+                repeatMode = repeatMode === 'once' ? 'none' : 'once';
+                updateUI();
+            }
         }, 300);
     }
+    updateUI();
 });
 
 audio.addEventListener('timeupdate', () => {
@@ -692,7 +696,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
 });
 
 // Playlist Management
-const addPlaylistBtn = document.querySelector('.library-header i[data-lucide="plus"]')?.parentElement || document.querySelector('.library-header i[data-lucide="plus"]');
+const addPlaylistBtn = document.querySelector('.library-header [data-lucide="plus"]')?.closest('i') || document.querySelector('.library-header [data-lucide="plus"]');
 const playlistModal = document.getElementById('playlist-modal');
 const savePlaylistBtn = document.getElementById('save-playlist-btn');
 const cancelPlaylistBtn = document.getElementById('cancel-playlist-btn');
@@ -763,7 +767,11 @@ function renderUserPlaylists() {
         `;
         
         // Drag and Drop Logic
-        item.addEventListener('dragstart', () => item.classList.add('dragging'));
+        item.addEventListener('dragstart', (e) => {
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
         item.addEventListener('dragend', () => {
             item.classList.remove('dragging');
             updatePlaylistOrder();
@@ -859,7 +867,7 @@ function createCard(item, index) {
 // Context Menu Actions
 document.getElementById('menu-add-queue').addEventListener('click', () => {
     queue.push(activeSongIndex);
-    alert('Added to Queue!');
+    alert('Song added to your queue!');
 });
 
 document.getElementById('menu-add-fav').addEventListener('click', () => {

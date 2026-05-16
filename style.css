@@ -297,6 +297,13 @@ body {
   color: var(--text-sub);
   opacity: 0;
   transition: var(--transition);
+  z-index: 5;
+}
+
+@media (max-width: 768px) {
+  .card-options {
+    opacity: 1;
+  }
 }
 
 .card:hover .card-options {
