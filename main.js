@@ -617,10 +617,26 @@ repeatBtn.addEventListener('click', () => {
     updateUI();
 });
 
+let isDraggingProgress = false;
+
+function updateProgressFromEvent(e) {
+    const rect = progressBar.getBoundingClientRect();
+    let clickX = e.clientX - rect.left;
+    clickX = Math.max(0, Math.min(clickX, rect.width));
+    const percent = clickX / rect.width;
+    progressFill.style.width = `${percent * 100}%`;
+    if (audio.duration) {
+        currentTimeEl.innerText = formatTime(percent * audio.duration);
+    }
+    return percent;
+}
+
 audio.addEventListener('timeupdate', () => {
-    const percent = (audio.currentTime / audio.duration) * 100;
-    progressFill.style.width = `${percent}%`;
-    currentTimeEl.innerText = formatTime(audio.currentTime);
+    if (!isDraggingProgress) {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = `${percent || 0}%`;
+        currentTimeEl.innerText = formatTime(audio.currentTime);
+    }
 });
 
 audio.addEventListener('loadedmetadata', () => {
@@ -642,11 +658,27 @@ audio.addEventListener('ended', () => {
     updateUI();
 });
 
-progressBar.addEventListener('click', (e) => {
-    const width = progressBar.clientWidth;
-    const clickX = e.offsetX;
-    const duration = audio.duration;
-    audio.currentTime = (clickX / width) * duration;
+progressBar.addEventListener('mousedown', (e) => {
+    isDraggingProgress = true;
+    progressFill.style.transition = 'none';
+    updateProgressFromEvent(e);
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (isDraggingProgress) {
+        updateProgressFromEvent(e);
+    }
+});
+
+document.addEventListener('mouseup', (e) => {
+    if (isDraggingProgress) {
+        isDraggingProgress = false;
+        progressFill.style.transition = 'width 0.1s linear';
+        const percent = updateProgressFromEvent(e);
+        if (audio.duration) {
+            audio.currentTime = percent * audio.duration;
+        }
+    }
 });
 
 // Top bar scroll effect

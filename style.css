@@ -542,6 +542,27 @@ body {
   border-radius: 2px;
   transition: width 0.1s linear;
   box-shadow: 0 0 10px var(--sky-blue-glow);
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.progress-slider:hover .progress-fill::after,
+.progress-slider:active .progress-fill::after {
+  opacity: 1;
 }
 
 .progress-slider:hover .progress-fill {
