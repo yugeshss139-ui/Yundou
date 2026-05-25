@@ -1,4 +1,6 @@
 import './style.css'
+import { Capacitor } from '@capacitor/core';
+import { CapacitorMusicControls as MusicControls } from 'capacitor-music-controls-plugin';
 
 // Initialize Lucide icons
 lucide.createIcons();
@@ -380,22 +382,97 @@ function savePlaybackState() {
 setInterval(savePlaybackState, 5000);
 
 // Media Session Setup
+function updatePositionState() {
+    if ('mediaSession' in navigator && !isNaN(audio.duration) && audio.duration > 0) {
+        try {
+            navigator.mediaSession.setPositionState({
+                duration: audio.duration,
+                playbackRate: audio.playbackRate,
+                position: audio.currentTime
+            });
+        } catch (e) {
+            console.log("Error updating position state:", e);
+        }
+    }
+}
+
 function updateMediaSession() {
     if ('mediaSession' in navigator) {
         const song = allSongs[currentSongIndex];
         navigator.mediaSession.metadata = new MediaMetadata({
             title: song.title,
             artist: song.artist,
-            album: 'Yundou Hits',
+            album: 'Yundou',
             artwork: [
-                { src: song.image, sizes: '512x512', type: 'image/png' }
+                { src: song.image, sizes: '96x96', type: 'image/jpeg' },
+                { src: song.image, sizes: '128x128', type: 'image/jpeg' },
+                { src: song.image, sizes: '192x192', type: 'image/jpeg' },
+                { src: song.image, sizes: '256x256', type: 'image/jpeg' },
+                { src: song.image, sizes: '384x384', type: 'image/jpeg' },
+                { src: song.image, sizes: '512x512', type: 'image/jpeg' }
             ]
         });
 
-        navigator.mediaSession.setActionHandler('play', togglePlay);
-        navigator.mediaSession.setActionHandler('pause', togglePlay);
+        navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+
+        if (navigator.mediaSession.setPositionState) {
+            navigator.mediaSession.setPositionState({
+                duration: audio.duration || 0,
+                playbackRate: audio.playbackRate || 1,
+                position: audio.currentTime || 0,
+            });
+        }
+
+
+        navigator.mediaSession.setActionHandler('play', () => {
+            audio.play();
+            isPlaying = true;
+            navigator.mediaSession.playbackState = 'playing';
+            updateUI();
+        });
+        navigator.mediaSession.setActionHandler('pause', () => {
+            audio.pause();
+            isPlaying = false;
+            navigator.mediaSession.playbackState = 'paused';
+            updateUI();
+        });
         navigator.mediaSession.setActionHandler('previoustrack', playPrev);
         navigator.mediaSession.setActionHandler('nexttrack', playNext);
+        
+        try {
+            navigator.mediaSession.setActionHandler('stop', () => {
+                audio.pause();
+                audio.currentTime = 0;
+                isPlaying = false;
+                navigator.mediaSession.playbackState = 'none';
+                updateUI();
+            });
+        } catch(e) {}
+
+        navigator.mediaSession.setActionHandler('seekto', (details) => {
+            if (details.fastSeek && 'fastSeek' in audio) {
+                audio.fastSeek(details.seekTime);
+                return;
+            }
+            audio.currentTime = details.seekTime;
+            updatePositionState();
+        });
+
+        try {
+            navigator.mediaSession.setActionHandler('seekforward', (details) => {
+                const skipTime = details.seekOffset || 10;
+                audio.currentTime = Math.min(audio.currentTime + skipTime, audio.duration);
+                updatePositionState();
+            });
+        } catch (e) {}
+
+        try {
+            navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+                const skipTime = details.seekOffset || 10;
+                audio.currentTime = Math.max(audio.currentTime - skipTime, 0);
+                updatePositionState();
+            });
+        } catch (e) {}
 
         try {
             navigator.mediaSession.setActionHandler('shuffle', () => {
@@ -406,9 +483,83 @@ function updateMediaSession() {
                 repeatMode = repeatMode === 'none' ? 'once' : (repeatMode === 'once' ? 'continuous' : 'none');
                 updateUI();
             });
-        } catch (e) {
-            console.log("Shuffle/Repeat actions not supported in Media Session");
+        } catch (e) {}
+        
+        updatePositionState();
+    }
+}
+
+let isMusicControlsInitialized = false;
+
+function initMusicControlsListener() {
+    if (isMusicControlsInitialized) return;
+    
+    MusicControls.addListener('controlsNotification', (info) => {
+        const message = info.message;
+        switch(message) {
+            case 'music-controls-next':
+                playNext();
+                break;
+            case 'music-controls-previous':
+                playPrev();
+                break;
+            case 'music-controls-pause':
+                audio.pause();
+                isPlaying = false;
+                updateUI();
+                break;
+            case 'music-controls-play':
+                audio.play();
+                isPlaying = true;
+                updateUI();
+                break;
+            case 'music-controls-destroy':
+                audio.pause();
+                isPlaying = false;
+                updateUI();
+                break;
+            case 'music-controls-toggle-play-pause' :
+                togglePlay();
+                break;
+            case 'music-controls-headset-unplugged':
+                audio.pause();
+                isPlaying = false;
+                updateUI();
+                break;
+            default:
+                break;
         }
+    });
+    isMusicControlsInitialized = true;
+}
+
+function updateMusicControls() {
+    if (typeof Capacitor !== 'undefined' && !Capacitor.isNativePlatform()) return;
+    try {
+        initMusicControlsListener();
+        const song = allSongs[currentSongIndex];
+        MusicControls.create({
+            track       : song.title,
+            artist      : song.artist,
+            cover       : song.image,
+            isPlaying   : isPlaying,
+            dismissable : true,
+            hasPrev   : true,
+            hasNext   : true,
+            hasClose  : true,
+            playIcon: 'media_play',
+            pauseIcon: 'media_pause',
+            prevIcon: 'media_prev',
+            nextIcon: 'media_next',
+            closeIcon: 'media_close',
+            notificationIcon: 'notification'
+        }).then(() => {
+            MusicControls.updateIsPlaying({
+                isPlaying: isPlaying
+            });
+        }).catch((e) => console.log('MusicControls creation error', e));
+    } catch (e) {
+        console.error('MusicControls error:', e);
     }
 }
 
@@ -488,6 +639,7 @@ function updateUI() {
 
     lucide.createIcons();
     savePlaybackState();
+    updateMusicControls();
 }
 
 // Initialize on load
@@ -641,7 +793,21 @@ audio.addEventListener('timeupdate', () => {
 
 audio.addEventListener('loadedmetadata', () => {
     durationEl.innerText = formatTime(audio.duration);
+    updatePositionState();
 });
+
+audio.addEventListener('play', () => {
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+    updatePositionState();
+});
+
+audio.addEventListener('pause', () => {
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+    updatePositionState();
+});
+
+audio.addEventListener('seeked', updatePositionState);
+audio.addEventListener('ratechange', updatePositionState);
 
 audio.addEventListener('ended', () => {
     if (repeatMode === 'once') {
@@ -677,6 +843,7 @@ document.addEventListener('mouseup', (e) => {
         const percent = updateProgressFromEvent(e);
         if (audio.duration) {
             audio.currentTime = percent * audio.duration;
+            updatePositionState();
         }
     }
 });

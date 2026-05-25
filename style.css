@@ -2,15 +2,23 @@
 
 :root {
   --bg-base: #000000;
-  --bg-sidebar: #000000;
-  --bg-main: #050505;
-  --bg-card: #0c0c0c;
-  --bg-card-hover: #151515;
+  --bg-sidebar: #070102;
+  --bg-main: #0a0102;
+  --bg-card: rgba(20, 2, 4, 0.4);
+  --bg-card-hover: rgba(45, 5, 10, 0.6);
   --text-main: #ffffff;
-  --text-sub: #a0a0a0;
-  --sky-blue: #87ceeb;
-  --sky-blue-hover: #a0e6ff;
-  --sky-blue-glow: rgba(135, 206, 235, 0.3);
+  --text-sub: #a6a6a6;
+  --accent: #ff2a4b;
+  --accent-hover: #ff526e;
+  --accent-glow: rgba(255, 42, 75, 0.25);
+  --accent-glow-strong: rgba(255, 42, 75, 0.5);
+  
+  /* Retain old variable names mapped to new theme to prevent breaks */
+  --sky-blue: var(--accent);
+  --sky-blue-hover: var(--accent-hover);
+  --sky-blue-glow: var(--accent-glow);
+  --spotify-green: var(--accent);
+  
   --sidebar-width: 240px;
   --player-height: 90px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -40,7 +48,8 @@ body {
 
 /* Sidebar Styles */
 .sidebar {
-  background-color: var(--bg-sidebar);
+  background: linear-gradient(180deg, rgba(8, 1, 2, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%);
+  border-right: 1px solid rgba(255, 42, 75, 0.08);
   padding: 24px 12px;
   display: flex;
   flex-direction: column;
@@ -81,8 +90,8 @@ body {
 }
 
 .nav-item:hover, .nav-item.active {
-  color: var(--sky-blue);
-  background: rgba(135, 206, 235, 0.05);
+  color: var(--accent);
+  background: rgba(255, 42, 75, 0.06);
 }
 
 .nav-item i {
@@ -115,13 +124,14 @@ body {
 
 /* Main Content Styles */
 .main-content {
-  background: linear-gradient(to bottom, #111111, var(--bg-main) 40%);
+  background: linear-gradient(135deg, rgba(28, 3, 5, 0.95) 0%, rgba(6, 1, 2, 0.98) 40%, rgba(0, 0, 0, 1) 100%);
   overflow-y: auto;
   position: relative;
   grid-row: 1 / 2;
-  border-radius: 8px;
-  margin: 8px 8px 0 0;
-  border: 1px solid rgba(135, 206, 235, 0.1);
+  border-radius: 12px;
+  margin: 12px 12px 0 0;
+  border: 1px solid rgba(255, 42, 75, 0.12);
+  box-shadow: inset 0 0 40px rgba(255, 42, 75, 0.04);
 }
 
 .top-bar {
@@ -226,19 +236,21 @@ body {
 }
 
 .card {
-  background-color: var(--bg-card);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: var(--transition);
   cursor: pointer;
   position: relative;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .card:hover {
-  background-color: var(--bg-card-hover);
-  border-color: var(--sky-blue);
-  box-shadow: 0 0 15px var(--sky-blue-glow);
+  background: rgba(255, 42, 75, 0.06);
+  border-color: rgba(255, 42, 75, 0.4);
+  box-shadow: 0 8px 24px rgba(255, 42, 75, 0.15);
+  transform: translateY(-4px);
 }
 
 .card-image {
@@ -274,15 +286,22 @@ body {
   bottom: 80px;
   width: 48px;
   height: 48px;
-  background-color: var(--sky-blue);
+  background-color: var(--accent);
+  color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 16px rgba(255, 42, 75, 0.3);
   opacity: 0;
   transform: translateY(8px);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.play-btn-overlay:hover {
+  background-color: var(--accent-hover);
+  transform: scale(1.1) !important;
+  box-shadow: 0 8px 20px var(--accent-glow-strong);
 }
 
 .card:hover .play-btn-overlay {
@@ -397,14 +416,27 @@ body {
 }
 
 .btn-save {
-  background: #87ceeb; /* Sky blue */
-  color: #000;
+  background: var(--accent);
+  color: #fff;
+  transition: var(--transition);
+}
+
+.btn-save:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 0 15px var(--accent-glow);
+  transform: scale(1.05);
 }
 
 .btn-cancel {
-  background: #87ceeb; /* Sky blue */
-  color: #000;
-  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: var(--transition);
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
 }
 
 /* Context Menu */
@@ -444,13 +476,15 @@ body {
 
 /* Player Bar Styles */
 .player-bar {
-  background-color: #000000;
+  background: linear-gradient(90deg, rgba(8, 1, 2, 0.98) 0%, rgba(0, 0, 0, 0.99) 100%);
   grid-column: 1 / 3;
   display: grid;
   grid-template-columns: 1fr 1.5fr;
   align-items: center;
   padding: 0 16px;
-  border-top: 1px solid #282828;
+  border-top: 1px solid rgba(255, 42, 75, 0.15);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.7);
+  z-index: 1000;
 }
 
 .current-track {
@@ -500,8 +534,8 @@ body {
 }
 
 .play-pause {
-  background-color: var(--sky-blue);
-  color: black !important;
+  background-color: var(--accent);
+  color: white !important;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -509,11 +543,13 @@ body {
   align-items: center;
   justify-content: center;
   transition: var(--transition);
+  box-shadow: 0 0 10px var(--accent-glow);
 }
 
 .play-pause:hover {
   transform: scale(1.1);
-  box-shadow: 0 0 20px var(--sky-blue-glow);
+  background-color: var(--accent-hover);
+  box-shadow: 0 0 20px var(--accent-glow-strong);
 }
 
 .playback-bar {
