@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "omniroute/my-coding-models",
+  "provider": {
+    "omniroute": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "OmniRoute",
+      "options": {
+        "baseURL": "http://localhost:20128/v1",
+        "apiKey": "sk_omniroute"
+      },
+      "models": {
+        "my-coding-models": {
+          "name": "My Coding Models"
+        }
+      }
+    }
+  }
+}

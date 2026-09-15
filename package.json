@@ -1,0 +1,46 @@
+{
+  "name": "yundo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently --names vite,api --prefix-colors cyan,green \"npm run dev:vite\" \"npm run dev:api\"",
+    "dev:vite": "vite",
+    "dev:api": "tsx scripts/dev-api-server.ts",
+    "dev:vercel": "vercel dev --listen 5173",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "create-user": "node scripts/create-user.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1128.0",
+    "@aws-sdk/s3-request-presigner": "^3.1128.0",
+    "cloudinary": "^2.11.0",
+    "firebase": "^12.18.0",
+    "firebase-admin": "^14.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.3"
+  },
+  "overrides": {
+    "jose": "4.15.9"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "concurrently": "^10.0.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "oxlint": "^1.79.0",
+    "playwright": "^1.63.0",
+    "tsx": "^4.23.13",
+    "typescript": "~6.0.2",
+    "vercel": "^59.13.1",
+    "vite": "^8.2.2"
+  }
+}

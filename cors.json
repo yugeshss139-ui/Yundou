@@ -1,0 +1,17 @@
+[
+  {
+    "corsRuleName": "yundo-web-upload",
+    "allowedOrigins": [
+      "https://yundo-new.vercel.app"
+    ],
+    "allowedMethods": [
+      "PUT",
+      "GET",
+      "HEAD"
+    ],
+    "allowedHeaders": [
+      "*"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]

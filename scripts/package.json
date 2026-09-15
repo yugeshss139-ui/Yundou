@@ -1,0 +1,11 @@
+{
+  "name": "yundo-scripts",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "create-user": "node scripts/create-user.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^14.3.0"
+  }
+}

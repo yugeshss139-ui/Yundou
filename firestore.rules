@@ -1,0 +1,126 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default: deny everything
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ─── Helper Functions ──────────────────────────────────────
+    // Check requesting user's role/permissions from their own profile.
+
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return getRole() == 'admin';
+    }
+
+    function isSubAdmin() {
+      return getRole() == 'subadmin';
+    }
+
+    function isStaff() {
+      return isAdmin() || isSubAdmin();
+    }
+
+    function getPermission(perm) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions[perm] == true;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    // ─── users/{uid} ───────────────────────────────────────────
+    // User profile documents. Created only by admin script.
+    //
+    // Rules:
+    //   - Owner may READ their own profile.
+    //   - Admin may READ any user profile and LIST all users.
+    //   - Subadmin may READ any user profile (for user management).
+    //   - No client creates/deletes user documents (admin script only).
+    //   - Only admin may UPDATE user documents (role/permissions changes).
+    //   - Subadmin must NOT be able to change roles or permissions.
+    //   - Owner may update their own profile (username only, no role).
+    match /users/{uid} {
+      allow read: if request.auth != null && (
+        isOwner(uid) || isAdmin() || isSubAdmin()
+      );
+      allow list: if request.auth != null && (isAdmin() || isSubAdmin());
+      allow create: if false;
+      allow delete: if false;
+
+      // Update rules: separate role/permission changes from profile updates
+      allow update: if request.auth != null && (
+        // Admin can update anything
+        isAdmin() ||
+        // Owner can update their own username only (no role/permissions)
+        (isOwner(uid) &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions']))
+      );
+    }
+
+    // ─── users/{uid}/playlists/{playlistId} ────────────────────
+    // User playlists. Each playlist belongs to exactly one user.
+    //
+    // Rules:
+    //   - Owner may READ their own playlists.
+    //   - Admin may CRUD any user's playlists (full access).
+    //   - Subadmin may CRUD if they have managePlaylists permission.
+    match /users/{uid}/playlists/{playlistId} {
+      allow read: if request.auth != null && (
+        isOwner(uid) || isAdmin() || (isSubAdmin() && getPermission('managePlaylists'))
+      );
+      allow create: if request.auth != null && (
+        isAdmin() || (isSubAdmin() && getPermission('managePlaylists'))
+      );
+      allow update: if request.auth != null && (
+        isAdmin() || (isSubAdmin() && getPermission('managePlaylists'))
+      );
+      allow delete: if request.auth != null && (
+        isAdmin() || (isSubAdmin() && getPermission('managePlaylists'))
+      );
+    }
+
+    // ─── users/{uid}/playlists/{playlistId}/songs/{songId} ─────
+    // Songs within a playlist. Each song belongs to one playlist
+    // which belongs to one user.
+    //
+    // Rules:
+    //   - Owner may READ their own songs.
+    //   - Admin may CRUD any user's songs (full access).
+    //   - Subadmin may CRUD if they have manageSongs permission.
+    match /users/{uid}/playlists/{playlistId}/songs/{songId} {
+      allow read: if request.auth != null && (
+        isOwner(uid) || isAdmin() || (isSubAdmin() && getPermission('manageSongs'))
+      );
+      allow create: if request.auth != null && (
+        isAdmin() || (isSubAdmin() && getPermission('manageSongs'))
+      );
+      allow update: if request.auth != null && (
+        isAdmin() || (isSubAdmin() && getPermission('manageSongs'))
+      );
+      allow delete: if request.auth != null && (
+        isAdmin() || (isSubAdmin() && getPermission('manageSongs'))
+      );
+    }
+
+    // ─── usernames/{username} ──────────────────────────────────
+    // Username → email mapping for login lookup.
+    // Created only by admin script.
+    //
+    // Rules:
+    //   - `get` allowed without auth: login must resolve username to
+    //     email BEFORE the user is authenticated.
+    //   - `list` denied: prevents enumeration of all usernames.
+    //   - No client writes allowed. Admin script handles all mutations.
+    match /usernames/{username} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+  }
+}

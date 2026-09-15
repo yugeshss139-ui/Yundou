@@ -1,0 +1,230 @@
+.home-page {
+  padding-top: 8px;
+  position: relative;
+}
+
+.home-greeting {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, rgba(168, 85, 247, 1) 0%, rgba(34, 211, 238, 0.95) 55%, rgba(255, 45, 149, 0.92) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.3px;
+}
+
+.home-subtitle {
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+}
+
+.home-section {
+  margin-bottom: 36px;
+}
+
+.home-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.home-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
+}
+
+.home-card {
+  background: rgba(10, 10, 18, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-xl);
+  padding: 26px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background 150ms ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.home-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.04), rgba(255, 45, 149, 0.02));
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.home-card:hover {
+  border-color: rgba(168, 85, 247, 0.35);
+  box-shadow: var(--shadow-glow-strong);
+  transform: translateY(-3px);
+}
+
+.home-card:hover::before {
+  opacity: 1;
+}
+
+.home-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.14);
+}
+
+.home-card-icon svg {
+  width: 24px;
+  height: 24px;
+  color: var(--accent-purple);
+}
+
+.home-card-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  position: relative;
+  z-index: 1;
+}
+
+.home-card-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Real playlist preview */
+.home-playlists {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home-playlist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(14, 14, 24, 0.4);
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.home-playlist-item:hover {
+  background: rgba(168, 85, 247, 0.06);
+  border-color: var(--border-accent);
+}
+
+.home-playlist-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-purple-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.home-playlist-item-icon svg {
+  width: 16px;
+  height: 16px;
+  color: var(--accent-purple);
+}
+
+.home-playlist-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.home-playlist-item-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-playlist-item-count {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Music atmosphere */
+.home-atmosphere {
+  margin-top: 40px;
+  padding: 34px;
+  background: rgba(10, 10, 18, 0.36);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  opacity: 0.72;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.home-atmosphere::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.03), rgba(34, 211, 238, 0.02), rgba(255, 45, 149, 0.02));
+  pointer-events: none;
+}
+
+.home-atmosphere svg {
+  width: 28px;
+  height: 28px;
+  color: var(--text-muted);
+}
+
+.home-atmosphere-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+@media (max-width: 480px) {
+  .home-greeting {
+    font-size: 1.4rem;
+  }
+
+  .home-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .home-atmosphere {
+    padding: 24px 16px;
+    gap: 16px;
+  }
+}
